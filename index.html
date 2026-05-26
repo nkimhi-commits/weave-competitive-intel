@@ -65,9 +65,9 @@
   .filter-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim);}
   .tbl-wrap{overflow-x:auto;border:1px solid var(--border);}
   table{width:100%;border-collapse:collapse;min-width:900px;}
-  .cg{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);background:var(--surface2);padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;}
+  .cg{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);background:var(--surface2);padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;}
   .cg-b{border-left:1px solid var(--border);}
-  thead th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);background:var(--surface);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);border-right:1px solid var(--border-dim);white-space:nowrap;position:sticky;top:0;z-index:5;}
+  thead th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);background:var(--surface);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);border-right:1px solid var(--border-dim);white-space:nowrap;position:sticky;top:0;z-index:5;}
   thead th:last-child{border-right:none;}
   thead th.tgs{border-left:1px solid var(--border);}
   tbody tr{border-bottom:1px solid var(--border-dim);transition:background .15s;}
@@ -75,12 +75,12 @@
   tbody tr:last-child{border-bottom:none;}
   tbody tr.wr{background:var(--accent-dim);border-bottom:1px solid rgba(93,242,122,.15);}
   tbody tr.wr:hover{background:rgba(93,242,122,.12);}
-  td{padding:11px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.04em;color:var(--text-dim);border-right:1px solid var(--border-dim);vertical-align:top;line-height:1.6;}
+  td{padding:13px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.03em;color:var(--text-dim);border-right:1px solid var(--border-dim);vertical-align:top;line-height:1.65;}
   td:last-child{border-right:none;}
   td.tgs{border-left:1px solid var(--border);}
-  .cn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:3px;color:var(--text);}
-  .cd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .ct{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);}
+  .cn{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:3px;color:var(--text);}
+  .cd{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .ct{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);}
   .threat{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;}
   .tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
   .t-h .tdot{background:#fb7185;} .t-h{color:#fb7185;}
@@ -205,18 +205,18 @@
 <script>
 /* ── MAP DATA ── */
 const PLAYERS = [
-  { id:'weave',      label:'Figma Weave',   abbr:'FW', col:'#5DF27A', bg:'#5DF27A', tc:'#000', sz:44, x:74, y:16, weave:true,  tier:'Direct competitor',      desc:'Node-based + full compositing, relighting, inpainting, ControlNet, video timeline. Only platform combining deep workflow with professional editing suite.' },
-  { id:'flora',      label:'Flora',         abbr:'Fl', col:'#a78bfa', bg:'transparent', tc:'#a78bfa', sz:33, x:63, y:25,        tier:'Direct competitor',      desc:'Node-based, Style DNA for brand consistency, 50+ models, FAUNA AI agent. No compositing. $52M raised (Redpoint).' },
-  { id:'comfyui',    label:'ComfyUI',       abbr:'Cu', col:'#f59e0b', bg:'transparent', tc:'#f59e0b', sz:30, x:86, y:9,         tier:'Open-source workflow',   desc:'Deepest technical control, 60K+ community nodes. Developer-only, local install. $30M raised. Netflix, Tencent, Ubisoft users.' },
-  { id:'krea',       label:'Krea',          abbr:'Kr', col:'#60a5fa', bg:'transparent', tc:'#60a5fa', sz:31, x:58, y:36,        tier:'Aggregator + nodes',     desc:'Real-time canvas (<50ms), 64+ models, Krea Nodes (AI builds workflow from text), Krea Edit (inpainting, relighting, lens sim). $83M raised.' },
-  { id:'magnific',   label:'Magnific',      abbr:'Mg', col:'#fb7185', bg:'transparent', tc:'#fb7185', sz:29, x:37, y:40,        tier:'Aggregator + nodes',     desc:'Freepik → Magnific rebrand Apr 2026. Spaces node canvas, best real-time team collab, List Node for batch. $230M ARR.' },
-  { id:'adobe',      label:'Adobe Firefly', abbr:'AF', col:'#f97316', bg:'transparent', tc:'#f97316', sz:33, x:90, y:42,        tier:'Enterprise suite',       desc:'Commercially safe AI (licensed training data). Enterprise governance, CC integration. Node-based on roadmap only.' },
-  { id:'runway',     label:'Runway',        abbr:'Rw', col:'#e2e8f0', bg:'transparent', tc:'#e2e8f0', sz:31, x:73, y:65,        tier:'Professional generator', desc:'#1 video model (Gen-4.5). Film & entertainment. Adobe partnership. $300M ARR, $5.3B valuation.' },
-  { id:'midjourney', label:'Midjourney',    abbr:'Mj', col:'#94a3b8', bg:'transparent', tc:'#94a3b8', sz:29, x:81, y:76,        tier:'Professional generator', desc:'Best image aesthetic quality. V8.1. $500M+ ARR self-funded. No workflow system.' },
-  { id:'higgsfield', label:'Higgsfield',    abbr:'Hg', col:'#34d399', bg:'transparent', tc:'#34d399', sz:27, x:23, y:70,        tier:'Consumer / social',      desc:'22M users, $300M+ ARR. Cinema Studio, Soul ID, Marketing Studio. Social-first, no node-based.' },
-  { id:'artlist',    label:'Artlist',       abbr:'Al', col:'#fbbf24', bg:'transparent', tc:'#fbbf24', sz:25, x:16, y:80,        tier:'Consumer / asset lib',   desc:'900K+ licensed assets + AI gen. 50M users, $260M ARR. No node-based.' },
-  { id:'lightricks', label:'Lightricks',    abbr:'Lt', col:'#c084fc', bg:'transparent', tc:'#c084fc', sz:27, x:33, y:73,        tier:'Consumer / video',       desc:'LTX-2 open-source model (4K/50fps/audio). LTX Studio: story-to-video. NVIDIA partnership.' },
-  { id:'elevenlabs', label:'ElevenLabs',    abbr:'EL', col:'#7dd3fc', bg:'transparent', tc:'#7dd3fc', sz:25, x:13, y:63,        tier:'Audio / expanding',      desc:'Audio-first ($330M ARR, $11B valuation). ElevenLabs Flow: audio-only nodes. Key Weave audio partner.' }
+  { id:'weave',      label:'Figma Weave',   abbr:'FW', col:'#5DF27A', bg:'#5DF27A', tc:'#000', sz:44, x:88, y:15, weave:true,  tier:'Direct competitor',      desc:'Node-based + full compositing, relighting, inpainting, ControlNet, video timeline. Only platform combining deep workflow with professional editing suite.' },
+  { id:'flora',      label:'Flora',         abbr:'Fl', col:'#a78bfa', bg:'transparent', tc:'#a78bfa', sz:33, x:63, y:22,        tier:'Direct competitor',      desc:'Node-based, Style DNA for brand consistency, 50+ models, FAUNA AI agent. No compositing. $52M raised (Redpoint).' },
+  { id:'comfyui',    label:'ComfyUI',       abbr:'Cu', col:'#f59e0b', bg:'transparent', tc:'#f59e0b', sz:30, x:96, y:13,        tier:'Open-source workflow',   desc:'Deepest technical control, 60K+ community nodes. Developer-only, local install. $30M raised. Netflix, Tencent, Ubisoft users.' },
+  { id:'krea',       label:'Krea',          abbr:'Kr', col:'#60a5fa', bg:'transparent', tc:'#60a5fa', sz:31, x:72, y:38,        tier:'Aggregator + nodes',     desc:'Real-time canvas (<50ms), 64+ models, Krea Nodes (AI builds workflow from text), Krea Edit (inpainting, relighting, lens sim). $83M raised.' },
+  { id:'magnific',   label:'Magnific',      abbr:'Mg', col:'#fb7185', bg:'transparent', tc:'#fb7185', sz:29, x:22, y:28,        tier:'Aggregator + nodes',     desc:'Freepik → Magnific rebrand Apr 2026. Spaces node canvas, best real-time team collab, List Node for batch. $230M ARR.' },
+  { id:'adobe',      label:'Adobe Firefly', abbr:'AF', col:'#f97316', bg:'transparent', tc:'#f97316', sz:33, x:92, y:55,        tier:'Enterprise suite',       desc:'Commercially safe AI (licensed training data). Enterprise governance, CC integration. Node-based on roadmap only.' },
+  { id:'runway',     label:'Runway',        abbr:'Rw', col:'#e2e8f0', bg:'transparent', tc:'#e2e8f0', sz:31, x:62, y:57,        tier:'Professional generator', desc:'#1 video model (Gen-4.5). Film & entertainment. Adobe partnership. $300M ARR, $5.3B valuation.' },
+  { id:'midjourney', label:'Midjourney',    abbr:'Mj', col:'#94a3b8', bg:'transparent', tc:'#94a3b8', sz:29, x:82, y:72,        tier:'Professional generator', desc:'Best image aesthetic quality. V8.1. $500M+ ARR self-funded. No workflow system.' },
+  { id:'higgsfield', label:'Higgsfield',    abbr:'Hg', col:'#34d399', bg:'transparent', tc:'#34d399', sz:27, x:10, y:63,        tier:'Consumer / social',      desc:'22M users, $300M+ ARR. Cinema Studio, Soul ID, Marketing Studio. Social-first, no node-based.' },
+  { id:'artlist',    label:'Artlist',       abbr:'Al', col:'#fbbf24', bg:'transparent', tc:'#fbbf24', sz:25, x:12, y:75,        tier:'Consumer / asset lib',   desc:'900K+ licensed assets + AI gen. 50M users, $260M ARR. No node-based.' },
+  { id:'lightricks', label:'Lightricks',    abbr:'Lt', col:'#c084fc', bg:'transparent', tc:'#c084fc', sz:27, x:35, y:55,        tier:'Consumer / video',       desc:'LTX-2 open-source model (4K/50fps/audio). LTX Studio: story-to-video. NVIDIA partnership.' },
+  { id:'elevenlabs', label:'ElevenLabs',    abbr:'EL', col:'#7dd3fc', bg:'transparent', tc:'#7dd3fc', sz:25, x:28, y:47,        tier:'Audio / expanding',      desc:'Audio-first ($330M ARR, $11B valuation). ElevenLabs Flow: audio-only nodes. Key Weave audio partner.' }
 ];
 
 /* ── TABLE DATA ── */
