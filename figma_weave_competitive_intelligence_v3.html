@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figma Weave — Competitive Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0c0e; --surface:#111114; --surface2:#131318;
+    --border:#252530; --border-dim:#1e1e28;
+    --text:#f0ece6; --text-dim:#a0a0b8; --text-mid:#6e6e88;
+    --axis-lbl:#8888a8; --quad-lbl:#606078;
+    --accent:#5DF27A; --accent-dim:rgba(93,242,122,.08);
+    --axis-line:#44445a; --row-hover:rgba(255,255,255,.03);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;user-select:none;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;padding:28px 24px 48px;}
+  .eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-mid);margin-bottom:6px;}
+  .section-title{font-size:22px;font-weight:800;line-height:1.2;margin-bottom:4px;}
+  .section-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin-top:5px;}
+  .map-section{margin-bottom:52px;}
+  .map-header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  .controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .hint{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--text-dim);letter-spacing:.08em;display:flex;align-items:center;gap:7px;}
+  .blink{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 2s ease-in-out infinite;flex-shrink:0;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  .btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);background:transparent;border:1px solid var(--border);padding:7px 16px;cursor:pointer;transition:color .2s,border-color .2s;}
+  .btn:hover{color:var(--text);border-color:#666;}
+  .map-outer{display:flex;gap:0;}
+  .y-wrap{display:flex;align-items:center;justify-content:center;width:44px;flex-shrink:0;}
+  .y-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--axis-lbl);writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;}
+  .map-col{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .canvas{position:relative;width:100%;height:560px;background:var(--surface);border:1px solid var(--border);overflow:hidden;}
+  .canvas::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;}
+  .ax{position:absolute;pointer-events:none;}
+  .ax-x{top:50%;left:0;right:0;height:2px;background:var(--axis-line);transform:translateY(-50%);}
+  .ax-y{left:50%;top:0;bottom:0;width:2px;background:var(--axis-line);transform:translateX(-50%);}
+  .q-tl{position:absolute;top:0;left:0;width:50%;height:50%;background:rgba(255,255,255,.018);pointer-events:none;}
+  .q-tr{position:absolute;top:0;right:0;width:50%;height:50%;background:rgba(93,242,122,.04);pointer-events:none;border-left:1px dashed rgba(93,242,122,.15);border-bottom:1px dashed rgba(93,242,122,.15);}
+  .q-bl{position:absolute;bottom:0;left:0;width:50%;height:50%;background:rgba(255,255,255,.006);pointer-events:none;}
+  .q-br{position:absolute;bottom:0;right:0;width:50%;height:50%;background:rgba(255,255,255,.012);pointer-events:none;}
+  .ql{position:absolute;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:var(--quad-lbl);pointer-events:none;line-height:1.65;}
+  .al{position:absolute;font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--axis-lbl);pointer-events:none;font-weight:500;}
+  .ax-arrow{position:absolute;pointer-events:none;font-size:11px;color:var(--axis-line);line-height:1;}
+  .player{position:absolute;transform:translate(-50%,-50%);cursor:grab;z-index:20;touch-action:none;}
+  .player:active,.player.drag{cursor:grabbing;z-index:100;}
+  .dot{border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:500;letter-spacing:.03em;position:relative;transition:transform .15s,box-shadow .15s;}
+  .player:hover .dot{transform:scale(1.18);box-shadow:0 0 20px currentColor;}
+  .player.drag .dot{transform:scale(1.22);}
+  .lbl{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);font-family:'Syne',sans-serif;font-size:10.5px;font-weight:700;white-space:nowrap;pointer-events:none;}
+  .ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;border:1.5px solid rgba(93,242,122,.4);animation:pulse 2.6s ease-in-out infinite;pointer-events:none;}
+  @keyframes pulse{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:.07;transform:translate(-50%,-50%) scale(1.65)}}
+  .x-row{display:flex;justify-content:center;margin-top:10px;}
+  .x-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--axis-lbl);}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;padding:12px 16px;background:rgba(255,255,255,.017);border:1px solid var(--border-dim);}
+  .li{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--text-dim);}
+  .ld{width:10px;height:10px;border-radius:50%;border:1.5px solid;flex-shrink:0;}
+  .divider{border:none;border-top:1px solid var(--border-dim);margin:0 0 48px;}
+  .tbl-header{margin-bottom:20px;}
+  .filter-row{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .filter-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-dim);background:transparent;border:1px solid var(--border);padding:6px 14px;cursor:pointer;transition:all .18s;white-space:nowrap;}
+  .filter-btn:hover{color:var(--text);border-color:#555;}
+  .filter-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim);}
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;min-width:900px;}
+  .cg{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);background:var(--surface2);padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;}
+  .cg-b{border-left:1px solid var(--border);}
+  thead th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);background:var(--surface);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);border-right:1px solid var(--border-dim);white-space:nowrap;position:sticky;top:0;z-index:5;}
+  thead th:last-child{border-right:none;}
+  thead th.tgs{border-left:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border-dim);transition:background .15s;}
+  tbody tr:hover{background:var(--row-hover);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr.wr{background:var(--accent-dim);border-bottom:1px solid rgba(93,242,122,.15);}
+  tbody tr.wr:hover{background:rgba(93,242,122,.12);}
+  td{padding:11px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.04em;color:var(--text-dim);border-right:1px solid var(--border-dim);vertical-align:top;line-height:1.6;}
+  td:last-child{border-right:none;}
+  td.tgs{border-left:1px solid var(--border);}
+  .cn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:3px;color:var(--text);}
+  .cd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .ct{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mid);}
+  .threat{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;}
+  .tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .t-h .tdot{background:#fb7185;} .t-h{color:#fb7185;}
+  .t-m .tdot{background:#f59e0b;} .t-m{color:#f59e0b;}
+  .t-l .tdot{background:#3a3a50;} .t-l{color:var(--text-mid);}
+  .col-p{} .col-m{} .col-s{} .hide{display:none;}
+  .footnote{margin-top:16px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.07em;color:var(--text-mid);line-height:1.7;border-top:1px solid var(--border-dim);padding-top:12px;}
+  .tip{position:fixed;background:#16161c;border:1px solid #2c2c3a;padding:10px 14px;font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.05em;color:#8080a0;pointer-events:none;z-index:999;opacity:0;transition:opacity .15s;max-width:250px;line-height:1.65;}
+  .tip.on{opacity:1;}
+  .tip-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .tip-tier{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;opacity:.65;}
+</style>
+</head>
+<body>
+
+<!-- MAP -->
+<div class="map-section">
+  <div class="map-header">
+    <div>
+      <div class="eyebrow">Figma Weave · AI Creative Tools · May 2026</div>
+      <div class="section-title">Competitive Positioning Map</div>
+    </div>
+    <div class="controls">
+      <div class="hint"><div class="blink"></div>Drag any player to reposition</div>
+      <button class="btn" onclick="resetMap()">↺ Reset</button>
+    </div>
+  </div>
+  <div class="map-outer">
+    <div class="y-wrap"><div class="y-lbl">▼ Generation Tool · · · · · · · Workflow System ▲</div></div>
+    <div class="map-col">
+      <div class="canvas" id="cv">
+        <div class="q-tl"></div><div class="q-tr"></div><div class="q-bl"></div><div class="q-br"></div>
+        <div class="ax ax-x"></div><div class="ax ax-y"></div>
+        <div class="ax-arrow" style="top:50%;right:6px;transform:translateY(-50%);">▶</div>
+        <div class="ax-arrow" style="top:50%;left:6px;transform:translateY(-50%);">◀</div>
+        <div class="ax-arrow" style="top:6px;left:50%;transform:translateX(-50%);">▲</div>
+        <div class="ax-arrow" style="bottom:6px;left:50%;transform:translateX(-50%);">▼</div>
+        <div class="al" style="top:50%;left:25%;transform:translate(-50%,-50%) translateY(18px);">← Consumer</div>
+        <div class="al" style="top:50%;left:75%;transform:translate(-50%,-50%) translateY(18px);">Professional →</div>
+        <div class="al" style="top:25%;left:50%;transform:translate(-50%,-50%);text-align:center;">Workflow System ↑</div>
+        <div class="al" style="top:75%;left:50%;transform:translate(-50%,-50%);text-align:center;">↓ Generation Tool</div>
+        <div class="ql" style="top:13px;left:13px;">Simple workflow tools<br>Consumer audience</div>
+        <div class="ql" style="top:13px;right:13px;text-align:right;color:#6a8a6e;">✦ Professional workflow systems<br>High craft depth</div>
+        <div class="ql" style="bottom:13px;left:13px;">Consumer generators<br>Output-first</div>
+        <div class="ql" style="bottom:13px;right:13px;text-align:right;">Professional generators<br>Quality-first</div>
+      </div>
+      <div class="x-row"><div class="x-lbl">◀ Consumer Creator ——————————————————————————— Professional Creative ▶</div></div>
+      <div class="legend" id="leg"></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- TABLE -->
+<div>
+  <div class="tbl-header">
+    <div class="eyebrow">Figma Weave · Competitive Intelligence · May 2026</div>
+    <div class="section-title">Market Comparison Table</div>
+    <div class="section-sub">All data sourced and verified May 2026</div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setView('all',this)">All columns</button>
+    <button class="filter-btn" onclick="setView('product',this)">🛠 Product — capabilities &amp; depth</button>
+    <button class="filter-btn" onclick="setView('market',this)">📣 Marketing — audience &amp; positioning</button>
+    <button class="filter-btn" onclick="setView('strategy',this)">📊 Strategy &amp; sales — scale &amp; threat</button>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <colgroup>
+        <col style="min-width:140px">
+        <col class="col-p" style="min-width:110px">
+        <col class="col-p" style="min-width:170px">
+        <col class="col-p" style="min-width:150px">
+        <col class="col-p" style="min-width:110px">
+        <col class="col-m" style="min-width:150px">
+        <col class="col-m" style="min-width:210px">
+        <col class="col-m" style="min-width:170px">
+        <col class="col-m" style="min-width:130px">
+        <col class="col-s" style="min-width:160px">
+        <col class="col-s" style="min-width:95px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="cg">Company</th>
+          <th class="cg cg-b col-p" colspan="4">Product &amp; Capabilities</th>
+          <th class="cg cg-b col-m" colspan="4">Market &amp; Positioning</th>
+          <th class="cg cg-b col-s" colspan="2">Scale &amp; Strategy</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th class="tgs col-p">Node depth</th>
+          <th class="col-p">Product capabilities</th>
+          <th class="col-p">Target personas</th>
+          <th class="col-p">Pricing tier</th>
+          <th class="tgs col-m">Marketing engine</th>
+          <th class="col-m">How they position themselves</th>
+          <th class="col-m">Enterprise motion</th>
+          <th class="col-m">Business status</th>
+          <th class="tgs col-s">Key differentiator</th>
+          <th class="col-s">Threat</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="footnote">
+    Sources: Company websites · Sacra · SimilarWeb · SEMRush · G2 · Product Hunt · TechCrunch · CNBC · Krea/Adobe/Runway/Magnific press releases (all verified May 2026)
+    &nbsp;|&nbsp; Node depth: Full = compositing + editing + timeline · Moderate = workflow chaining · Light = AI-generated workflows · None = no node system
+  </div>
+</div>
+
+<div class="tip" id="tip">
+  <div class="tip-name" id="tn"></div>
+  <div class="tip-tier" id="tt"></div>
+  <div id="td"></div>
+</div>
+
+<script>
+/* ── MAP DATA ── */
+const PLAYERS = [
+  { id:'weave',      label:'Figma Weave',   abbr:'FW', col:'#5DF27A', bg:'#5DF27A', tc:'#000', sz:44, x:74, y:16, weave:true,  tier:'Direct competitor',      desc:'Node-based + full compositing, relighting, inpainting, ControlNet, video timeline. Only platform combining deep workflow with professional editing suite.' },
+  { id:'flora',      label:'Flora',         abbr:'Fl', col:'#a78bfa', bg:'transparent', tc:'#a78bfa', sz:33, x:63, y:25,        tier:'Direct competitor',      desc:'Node-based, Style DNA for brand consistency, 50+ models, FAUNA AI agent. No compositing. $52M raised (Redpoint).' },
+  { id:'comfyui',    label:'ComfyUI',       abbr:'Cu', col:'#f59e0b', bg:'transparent', tc:'#f59e0b', sz:30, x:86, y:9,         tier:'Open-source workflow',   desc:'Deepest technical control, 60K+ community nodes. Developer-only, local install. $30M raised. Netflix, Tencent, Ubisoft users.' },
+  { id:'krea',       label:'Krea',          abbr:'Kr', col:'#60a5fa', bg:'transparent', tc:'#60a5fa', sz:31, x:58, y:36,        tier:'Aggregator + nodes',     desc:'Real-time canvas (<50ms), 64+ models, Krea Nodes (AI builds workflow from text), Krea Edit (inpainting, relighting, lens sim). $83M raised.' },
+  { id:'magnific',   label:'Magnific',      abbr:'Mg', col:'#fb7185', bg:'transparent', tc:'#fb7185', sz:29, x:37, y:40,        tier:'Aggregator + nodes',     desc:'Freepik → Magnific rebrand Apr 2026. Spaces node canvas, best real-time team collab, List Node for batch. $230M ARR.' },
+  { id:'adobe',      label:'Adobe Firefly', abbr:'AF', col:'#f97316', bg:'transparent', tc:'#f97316', sz:33, x:90, y:42,        tier:'Enterprise suite',       desc:'Commercially safe AI (licensed training data). Enterprise governance, CC integration. Node-based on roadmap only.' },
+  { id:'runway',     label:'Runway',        abbr:'Rw', col:'#e2e8f0', bg:'transparent', tc:'#e2e8f0', sz:31, x:73, y:65,        tier:'Professional generator', desc:'#1 video model (Gen-4.5). Film & entertainment. Adobe partnership. $300M ARR, $5.3B valuation.' },
+  { id:'midjourney', label:'Midjourney',    abbr:'Mj', col:'#94a3b8', bg:'transparent', tc:'#94a3b8', sz:29, x:81, y:76,        tier:'Professional generator', desc:'Best image aesthetic quality. V8.1. $500M+ ARR self-funded. No workflow system.' },
+  { id:'higgsfield', label:'Higgsfield',    abbr:'Hg', col:'#34d399', bg:'transparent', tc:'#34d399', sz:27, x:23, y:70,        tier:'Consumer / social',      desc:'22M users, $300M+ ARR. Cinema Studio, Soul ID, Marketing Studio. Social-first, no node-based.' },
+  { id:'artlist',    label:'Artlist',       abbr:'Al', col:'#fbbf24', bg:'transparent', tc:'#fbbf24', sz:25, x:16, y:80,        tier:'Consumer / asset lib',   desc:'900K+ licensed assets + AI gen. 50M users, $260M ARR. No node-based.' },
+  { id:'lightricks', label:'Lightricks',    abbr:'Lt', col:'#c084fc', bg:'transparent', tc:'#c084fc', sz:27, x:33, y:73,        tier:'Consumer / video',       desc:'LTX-2 open-source model (4K/50fps/audio). LTX Studio: story-to-video. NVIDIA partnership.' },
+  { id:'elevenlabs', label:'ElevenLabs',    abbr:'EL', col:'#7dd3fc', bg:'transparent', tc:'#7dd3fc', sz:25, x:13, y:63,        tier:'Audio / expanding',      desc:'Audio-first ($330M ARR, $11B valuation). ElevenLabs Flow: audio-only nodes. Key Weave audio partner.' }
+];
+
+/* ── TABLE DATA ── */
+const ROWS = [
+  { id:'weave', color:'#5DF27A', weave:true, name:'Figma Weave', tier:'Direct competitor',
+    node:'Full — node canvas + compositing + editing + video timeline',
+    caps:'Compositing · Inpainting & outpainting · ControlNet · Relighting · Matte & z-depth · Upscaling · LoRA import · Multi-model chaining · Video timeline · 100+ models',
+    personas:'Senior Creative Professionals (Art Directors · Creative Directors · VFX Artists) · Motion Designers · Professional Video Editors',
+    pricing:'Premium — credit-based. Higher cost than consumer tools; justified by professional depth',
+    mktg:'Community-led · Collective program (curated artist partners) · No SEO content moat yet · Zero paid ads',
+    positioning:'"Artistic Intelligence." Process-first, not output-first. "From pixel to process." The workflow is the product — building creative machines. Anti-black-box. Human craft + AI capability.',
+    enterprise:'Active — Figma acquisition accelerates this. Workspace sharing · file ownership transfer · team plans · Figma design team integration in progress',
+    biz:'Acquired by Figma (Oct 2025) · $10M ARR · 12K paying users · 290K sign-ups · 70K social followers',
+    diff:'Only platform combining node-based workflow + full professional editing suite. Process-first positioning uncontested.',
+    threat:'— (us)' },
+
+  { id:'flora', color:'#a78bfa', weave:false, name:'Flora', tier:'Direct competitor',
+    node:'Moderate — node canvas · Style DNA · FAUNA AI agent · version branching',
+    caps:'Style DNA: extracts visual identity from brand refs and applies consistently. FAUNA AI agent learns individual creative history. 50+ models. Multiplayer canvas. API + MCP available. No compositing or video timeline.',
+    personas:'Senior Creative Professionals (Creative Directors · Brand Designers) · Agency Creative Teams · Enterprise Brand Teams. Clients: Nike · Netflix · Pentagram · Wonder Studios. Not hobbyists.',
+    pricing:'Mid — from $18/mo Starter · $54/mo Studio · $200/mo Scale · unlimited seats · credit rollover',
+    mktg:'Enterprise partnerships · Thought leadership content · Affiliate program · Thin SEO footprint',
+    positioning:'"Not another image generator — an AI creative agent." Direct response to AI homogenization. "Professional creative work requires transparency, repeatability, and taste learning." Against generic AI output.',
+    enterprise:'Active — clients: Nike · Netflix · Pentagram · Lionsgate · Alibaba · Wonder Studios. API + MCP for enterprise pipeline integration. Team workspace + multiplayer.',
+    biz:'$52M raised (Redpoint Series A · Jan 2026) · ~25 staff scaling to 75 · No public ARR',
+    diff:'Style DNA brand consistency engine. API + MCP ahead of Weave. FAUNA agent for personalised AI direction.',
+    threat:'High' },
+
+  { id:'comfyui', color:'#f59e0b', weave:false, name:'ComfyUI', tier:'Open-source workflow',
+    node:'Deepest — 60K+ community nodes · full technical control · local or cloud',
+    caps:'Maximum node depth. ControlNet · LoRA · custom samplers. App Mode (Mar 2026): deploy workflows as shareable apps. Tencent Cloud 3D. Runs locally (data privacy) or cloud. Power via community ecosystem.',
+    personas:'Creative Technologists (AI Engineers · Technical Artists · Developers) · Game Studio Artists (Ubisoft · mobile gaming) · VFX & Ad Studios · AI Researchers',
+    pricing:'Free — open-source. Comfy Org cloud version paid. Zero barrier to entry.',
+    mktg:'Community-driven · GitHub (105K stars) · YouTube tutorials · Zero marketing spend · Developer ecosystem',
+    positioning:'"The AI production engine for complete control over every model, every node, every step, every output." Developer-first authority and open-source credibility. Trusted by Netflix, Tencent, Ubisoft.',
+    enterprise:'Active adoption — clients: Netflix · Tencent · Ubisoft · ad studios. Used as infrastructure layer inside studio pipelines. No formal enterprise product.',
+    biz:'$30M raised (Apr 2026) · 4M users · 150K daily downloads',
+    diff:'Free + deepest technical control + runs locally. Developer default for AI pipeline building. Many Weave users migrated from here.',
+    threat:'Medium' },
+
+  { id:'krea', color:'#60a5fa', weave:false, name:'Krea', tier:'Aggregator + nodes',
+    node:'Light-Moderate — Krea Nodes (AI-generated workflow graphs) + Krea Edit (real editing tools)',
+    caps:'Real-time canvas (<50ms). Krea Edit: inpainting · outpainting · object removal · relighting (4 lights) · camera angle change · lens simulator. 64+ models. 22K upscaling. LoRA training. Krea 1 proprietary model (anti-AI aesthetic).',
+    personas:'Creative Professionals (Graphic Designers · Art Directors · Architects) · Marketing Teams · Advanced Content Creators. Similar to Weave but speed/breadth-focused vs. depth/quality-focused.',
+    pricing:'Mid — Free / Basic $9 / Pro $35 / Max $105 / Business $200 (50 seats). 20% off annual.',
+    mktg:'Strongest SEO in category: editorial comparison hub (krea.ai/articles). YouTube #1 social source. Zero paid.',
+    positioning:'"The most powerful AI suite for Creatives." Speed + breadth as core promise. Real-time creative feedback loop. "Generate, edit, and enhance in seconds." Power and accessibility together.',
+    enterprise:'Active — Business plan $200/mo (50 seats · roles · permissions · shared LoRAs · analytics API). Enterprise: custom · audit logs · dedicated support. Clients: LEGO · Samsung · Nike · Microsoft · Shopify.',
+    biz:'$83M raised · $500M valuation · 30M users · 750K+ weekly active',
+    diff:'Speed + breadth + real-time canvas. Category narrative ownership via SEO. Krea 1 proprietary model.',
+    threat:'High' },
+
+  { id:'magnific', color:'#fb7185', weave:false, name:'Magnific', tier:'Aggregator + nodes',
+    node:'Light-Moderate — Spaces canvas · List Node (batch) · real-time team collaboration',
+    caps:'Spaces: node canvas with Upload · Text · Image Gen · Video Gen · Upscaler · Designer · List Node (batch across variables). Best real-time team collaboration in category. 250M+ licensed stock assets bundled. No compositing.',
+    personas:'Agency Creative Teams · Brand Marketing Teams · Volume Content Producers (teams running 30–80 asset campaigns).',
+    pricing:'Budget-Mid — from €8/mo individual. Aggressive vs. competitors. Legacy subscriber base from Freepik.',
+    mktg:'Massive SEO moat from freepik.com legacy domain authority. Template-first onboarding. YouTube tutorial ecosystem growing.',
+    positioning:'"The no-collar economy." AI creative infrastructure for end-to-end production. "Creativity decoupled from technical skill barriers." Most comprehensive integrated platform — stock + AI + collaboration.',
+    enterprise:'Active — 290+ enterprise clients: BBC · Puma · Amazon Prime Video · Guess · R/GA. Team workspace · real-time co-editing · approval workflows. Business plan: 2K+ teams in first 6 weeks.',
+    biz:'$230M ARR · 1M+ paid subscribers · 290+ enterprise clients · 400+ staff · Bootstrapped',
+    diff:'Brand consistency at volume. Best team collaboration. Asset library + AI generation bundle. List Node for batch.',
+    threat:'Medium' },
+
+  { id:'adobe', color:'#f97316', weave:false, name:'Adobe Firefly', tier:'Enterprise suite',
+    node:'Roadmap — node-based confirmed in development (Adobe MAX 2025)',
+    caps:'Firefly Image/Video/Audio/Vector models. Partner models: ElevenLabs · Veo · Runway Gen-4.5 · Kling · Luma. Firefly Custom Models: train on proprietary brand assets. Firefly Foundry: API for enterprise content pipelines. Editing via CC apps.',
+    personas:'Enterprise Creative Teams · Agency Operations · Brand Marketing (existing CC subscribers). Proven at largest global brands.',
+    pricing:'Enterprise — bundled in CC ($23–60/mo). Firefly Foundry: multi-year enterprise agreements. Custom brand model training.',
+    mktg:'No direct AI marketing needed — distribution via existing CC base. PR-driven. Adobe MAX annual launch event.',
+    positioning:'"Create without limits." "Commercially safe AI." "Speed, scale, and brand intelligence." Enterprise safety and compliance as core differentiator. AI as extension of 40 years of creative tools.',
+    enterprise:'Leading enterprise motion in category — SSO · custom brand models · Firefly Foundry API · governance & compliance. Clients: Disney · Home Depot · Mattel · PepsiCo · Deloitte · IBM.',
+    biz:'Public company (ADBE) · $21B+ total ARR · No standalone Firefly ARR public',
+    diff:'"Commercially safe" AI — IP-indemnified. Only platform with licensed training data guarantee. CC ecosystem lock-in.',
+    threat:'High (future)' },
+
+  { id:'runway', color:'#e2e8f0', weave:false, name:'Runway', tier:'Professional generator',
+    node:'Light — workflow features exist but not production-depth',
+    caps:'Gen-4.5: #1 video model (Elo benchmark). World models research. Adobe preferred API partner. Color grading. Background removal. Real-time collaboration. Batch editing. Video-generation and manipulation focused.',
+    personas:'Professional Video Producers · Film & TV Creatives · VFX Studios · Video Agencies · Entertainment Industry.',
+    pricing:'Mid-High — Free / Standard $12 / Pro $28 / Unlimited $76 / Enterprise custom. API = Enterprise only (Jan 2026).',
+    mktg:'Partnership PR (Lionsgate · Adobe). Model benchmark announcements. Community. Zero paid.',
+    positioning:'"Pioneering new tools for human imagination." "AI is a new kind of camera that will reshape storytelling forever." Mission: anyone anywhere can tell their stories. Film/storytelling identity.',
+    enterprise:'Active — clients: Lionsgate · major studios · VFX houses. API enterprise tier. Real-time collaboration for teams. Priority processing on Enterprise plan.',
+    biz:'$300M ARR · $5.3B valuation · $860M+ raised · 300K customers',
+    diff:'Best video quality. Film industry credibility. World models research vision. Adobe partnership.',
+    threat:'Medium' },
+
+  { id:'midjourney', color:'#94a3b8', weave:false, name:'Midjourney', tier:'Professional generator',
+    node:'None',
+    caps:'Best aesthetic image quality per dollar. V8.1 (Apr 2026). Vary Region (inpainting) · Outpaint · Layers · Smart selection · Remix · Zoom · Retexture. 7 editing tools on web editor. Meta technology licensing deal.',
+    personas:'Senior Creative Professionals (Illustrators · Concept Artists · Designers) · Marketing Teams · Enterprise (growing). Strong creative community.',
+    pricing:'Mid-High — Free trial / Basic $10 / Standard $30 / Pro $60 / Mega $120 / Enterprise custom (SSO · API).',
+    mktg:'Discord community (21M users) = viral distribution. No editorial SEO. No paid.',
+    positioning:'"Your portal to transforming text into amazing images." Imagination and aesthetic wonder as core identity. Premium aesthetic = the brand. No professional workflow positioning.',
+    enterprise:'Early — Enterprise tier (SSO · API · commercial license · stealth mode · batch generation). Less structured than competitors — community-first culture.',
+    biz:'$500M+ ARR (est) · Self-funded · Zero VC · 100K+ paying users · Meta partnership',
+    diff:'Best image aesthetic quality. Premium brand. Self-sustaining at massive scale. Moving to enterprise in 2026.',
+    threat:'Low' },
+
+  { id:'higgsfield', color:'#34d399', weave:false, name:'Higgsfield', tier:'Consumer / social',
+    node:'None',
+    caps:'Cinema Studio (1296 lens options · cinematic camera controls · physics). Soul ID (character consistency). Marketing Studio (video from product URL). Popcorn (storyboarding). 15+ video models. Higgsfield Earn creator incentive.',
+    personas:'Social Media Creators · Content Marketers · Influencers · Brand Social Teams. Consumer and creator-first. Fortune 500 for social campaign production.',
+    pricing:'Budget-Mid — Free / Starter $15 / Plus $29 / Pro $49 / Ultra $129 / Enterprise custom.',
+    mktg:'Creator incentive program (Higgsfield Earn) → viral content loop. 38.66M monthly visits. Direct traffic dominant. Zero paid.',
+    positioning:'"Cinematic reasoning & ultimate realism. Next-level AI filmmaking." Social-first + cinematic production. "From product to finished ad in one workflow." Virtual production studio in a browser.',
+    enterprise:'Growing — Team plan · Enterprise for high-volume/compliance. Fortune 500 brand social campaigns. Marketing Studio for product-to-ad automation.',
+    biz:'$300M+ ARR · $1.3B valuation · $130M Series A · 22M users',
+    diff:'Click-to-video for social. Cinematic camera control for non-professionals. Viral creator flywheel.',
+    threat:'Low' },
+
+  { id:'artlist', color:'#fbbf24', weave:false, name:'Artlist', tier:'Consumer / asset library',
+    node:'None',
+    caps:'900K+ licensed royalty-free assets (music · SFX · footage · templates). Artlist AI Toolkit: integrates Sora · Veo · Kling · Flux · ElevenLabs. Artlist Studio (Spring 2026): visual direction with casting · locations · lighting · Smart Canvas.',
+    personas:'Content Creators · YouTubers · Social Video Producers · Small Agencies. Asset-library users expanding into AI generation.',
+    pricing:'Mid — AI Starter $11.99/mo · up to ~$50/mo · bundle (assets + AI). Annual only.',
+    mktg:'SEO authority from stock media. YouTube tutorial ecosystem. Content marketing. No paid.',
+    positioning:'"The ultimate creative AI ecosystem." "Creative supply chain under one login." Licensed assets + AI generation = safe, complete, all-in-one for content creators.',
+    enterprise:'Limited — primarily SMB and creator-focused. Some agency licensing. Enterprise custom pricing available but not primary GTM.',
+    biz:'$260M ARR · 50M users · Israeli company (Tel Aviv)',
+    diff:'Licensed asset library moat — no copyright risk. All-in-one supply chain (music + footage + AI gen).',
+    threat:'Low' },
+
+  { id:'lightricks', color:'#c084fc', weave:false, name:'Lightricks', tier:'Consumer / video',
+    node:'None — LTX Studio is linear',
+    caps:'LTX-2 open-source video model: 4K / 50fps / synchronized audio. Runs on consumer GPU. LTX Studio: script-to-storyboard-to-video. First + last frame interpolation. NVIDIA partnership.',
+    personas:'Developers · Indie Game Studios · Mobile Game Artists · TikTok Ad Creators · Open-source AI community.',
+    pricing:'API + SaaS — open-source model (free) + LTX Studio paid.',
+    mktg:'Open-source GitHub community (developer-first). Israeli startup press. NVIDIA partnership announcement. Zero paid.',
+    positioning:'"Democratizing video AI." Open-source philosophy: powerful models free for all. "From script to screen." Developer-first, infrastructure layer — model provider with a product on top.',
+    enterprise:'Limited — developer and indie studio focused. API enables pipeline integration but no formal enterprise product.',
+    biz:'Facetune heritage · LTX-2 #3 ranked image-to-video at launch · NVIDIA partnership · No ARR public',
+    diff:'Open-source model strategy. Runs locally. Developer and game studio default for cost-efficient video.',
+    threat:'Low' },
+
+  { id:'elevenlabs', color:'#7dd3fc', weave:false, name:'ElevenLabs', tier:'Audio / expanding',
+    node:'Light — ElevenLabs Flow: audio-only node workflow',
+    caps:'Best-in-class voice cloning + TTS (28+ languages). Sound effects. ElevenMusic. ElevenAgents (voice/chat agents). Dubbing and localization. Adobe Firefly integration. Expanding into video + agents.',
+    personas:'Developers · Enterprise CX Teams · Content Creators · Publishers · Localization Teams. Audio and agent infrastructure focus.',
+    pricing:'Mid-Enterprise — Free / Starter $5 / Creator $22 / Pro $99 / Scale $330 / Enterprise custom.',
+    mktg:'Developer community. API-first GTM. Enterprise case studies. Growing creator presence via ElevenCreative. Zero paid.',
+    positioning:'"The leading AI audio platform." Moving to: "Beyond voice." Audio intelligence layer for products and pipelines. Not a creative tool — a platform other tools are built on.',
+    enterprise:'Strong — clients: Deutsche Telekom · Revolut · Square · Meta · Salesforce. Enterprise: SSO · SLA · compliance · dedicated support. Agents as enterprise product.',
+    biz:'$330M ARR · $11B valuation · $781M raised',
+    diff:'Audio infrastructure moat. Best voice cloning quality. "Beyond voice" pivot. Key Weave audio partner — not a competitor.',
+    threat:'Low' }
+];
+
+/* ── MAP LOGIC ── */
+const INIT={};
+PLAYERS.forEach(p=>INIT[p.id]={x:p.x,y:p.y});
+const cv=document.getElementById('cv');
+const tip=document.getElementById('tip');
+const tn=document.getElementById('tn');
+const ttt=document.getElementById('tt');
+const tdd=document.getElementById('td');
+let mapNodes={},drag=null,off={x:0,y:0},ht=null;
+function pct(v,d){return(v/100)*d;}
+function mkNode(p){
+  const el=document.createElement('div');
+  el.className='player';el.dataset.id=p.id;
+  const cw=cv.offsetWidth,ch=cv.offsetHeight;
+  el.style.left=pct(p.x,cw)+'px';el.style.top=pct(p.y,ch)+'px';
+  let h=p.weave?'<div class="ring"></div>':'';
+  h+=`<div class="dot" style="width:${p.sz}px;height:${p.sz}px;border-color:${p.col};background:${p.bg};color:${p.tc};">${p.abbr}</div>`;
+  h+=`<div class="lbl" style="color:${p.col};">${p.label}</div>`;
+  el.innerHTML=h;
+  el.addEventListener('mousedown',e=>{if(e.button!==0)return;e.preventDefault();startDrag(p.id,e.clientX,e.clientY);});
+  el.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];startDrag(p.id,t.clientX,t.clientY);},{passive:false});
+  el.addEventListener('mouseenter',e=>{ht=setTimeout(()=>showTip(p,e),180);});
+  el.addEventListener('mouseleave',()=>{clearTimeout(ht);hideTip();});
+  el.addEventListener('mousemove',e=>moveTip(e.clientX,e.clientY));
+  cv.appendChild(el);mapNodes[p.id]=el;
+}
+function showTip(p,e){tn.textContent=p.label;ttt.textContent=p.tier;ttt.style.color=p.col;tdd.textContent=p.desc;tip.classList.add('on');moveTip(e.clientX,e.clientY);}
+function hideTip(){tip.classList.remove('on');}
+function moveTip(x,y){const w=tip.offsetWidth||250;tip.style.left=(x+w+24>window.innerWidth?x-w-10:x+14)+'px';tip.style.top=(y-10)+'px';}
+function startDrag(id,cx,cy){drag=id;clearTimeout(ht);hideTip();mapNodes[id].classList.add('drag');const r=cv.getBoundingClientRect();off.x=cx-r.left-parseFloat(mapNodes[id].style.left);off.y=cy-r.top-parseFloat(mapNodes[id].style.top);}
+function moveNode(cx,cy){if(!drag)return;const r=cv.getBoundingClientRect();const p=PLAYERS.find(d=>d.id===drag);const h=(p.sz||30)/2+4;let nx=cx-r.left-off.x,ny=cy-r.top-off.y;nx=Math.max(h,Math.min(r.width-h,nx));ny=Math.max(h,Math.min(r.height-h,ny));mapNodes[drag].style.left=nx+'px';mapNodes[drag].style.top=ny+'px';}
+document.addEventListener('mousemove',e=>moveNode(e.clientX,e.clientY));
+document.addEventListener('touchmove',e=>{if(drag){e.preventDefault();const t=e.touches[0];moveNode(t.clientX,t.clientY);}},{passive:false});
+function stopDrag(){if(drag){mapNodes[drag].classList.remove('drag');drag=null;}}
+document.addEventListener('mouseup',stopDrag);document.addEventListener('touchend',stopDrag);
+function resetMap(){const cw=cv.offsetWidth,ch=cv.offsetHeight;PLAYERS.forEach(p=>{const el=mapNodes[p.id];el.style.transition='left .45s cubic-bezier(.4,0,.2,1),top .45s cubic-bezier(.4,0,.2,1)';el.style.left=pct(INIT[p.id].x,cw)+'px';el.style.top=pct(INIT[p.id].y,ch)+'px';setTimeout(()=>el.style.transition='',500);});}
+(function(){const leg=document.getElementById('leg');const entries=[{col:'#5DF27A',bg:true,lbl:'Figma Weave (us)'},{col:'#a78bfa',bg:false,lbl:'Direct node-based competitors'},{col:'#f59e0b',bg:false,lbl:'Open-source workflow'},{col:'#60a5fa',bg:false,lbl:'Multi-model aggregators with nodes'},{col:'#f97316',bg:false,lbl:'Enterprise creative suite'},{col:'#e2e8f0',bg:false,lbl:'Professional generators'},{col:'#34d399',bg:false,lbl:'Consumer & social-first'},{col:'#7dd3fc',bg:false,lbl:'Audio-first, expanding into visual'},];entries.forEach(e=>{const d=document.createElement('div');d.className='li';d.innerHTML=`<div class="ld" style="${e.bg?'background:'+e.col+';':''}border-color:${e.col};"></div>${e.lbl}`;leg.appendChild(d);});})();
+PLAYERS.forEach(mkNode);
+
+/* ── TABLE LOGIC ── */
+function threatClass(v){const s=(v||'').toLowerCase();if(s.includes('high'))return 't-h';if(s.includes('med'))return 't-m';if(s.includes('low'))return 't-l';return '';}
+
+(function buildTable(){
+  const tbody=document.getElementById('tbody');
+  ROWS.forEach(r=>{
+    const tc=threatClass(r.threat);
+    const tr=document.createElement('tr');
+    if(r.weave)tr.classList.add('wr');
+    tr.innerHTML=`
+      <td><div class="cn"><div class="cd" style="background:${r.color};"></div>${r.name}</div><div class="ct">${r.tier}</div></td>
+      <td class="tgs col-p">${r.node}</td>
+      <td class="col-p">${r.caps}</td>
+      <td class="col-p">${r.personas}</td>
+      <td class="col-p">${r.pricing}</td>
+      <td class="tgs col-m">${r.mktg}</td>
+      <td class="col-m">${r.positioning}</td>
+      <td class="col-m">${r.enterprise}</td>
+      <td class="col-m">${r.biz}</td>
+      <td class="tgs col-s">${r.diff}</td>
+      <td class="col-s"><span class="threat ${tc}">${tc?'<span class="tdot"></span>':''}${r.threat}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+})();
+
+function setView(view,btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const p=document.querySelectorAll('.col-p');
+  const m=document.querySelectorAll('.col-m');
+  const s=document.querySelectorAll('.col-s');
+  const show=cls=>cls.forEach(el=>el.classList.remove('hide'));
+  const hide=cls=>cls.forEach(el=>el.classList.add('hide'));
+  if(view==='all'){show(p);show(m);show(s);}
+  else if(view==='product'){show(p);hide(m);hide(s);}
+  else if(view==='market'){hide(p);show(m);hide(s);}
+  else if(view==='strategy'){hide(p);hide(m);show(s);}
+}
+</script>
+</body>
+</html>
